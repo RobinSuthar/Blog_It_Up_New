@@ -15,16 +15,23 @@ export const blog = new Hono<{
 
 blog.use("/*", async (c, next) => {
   const authUser = c.req.header("authorization") || "";
-  const user = await verify(authUser, c.env.secert);
+  try {
+    const user = await verify(authUser, c.env.secert);
 
-  if (user) {
-    //@ts-ignore
-    c.set("userId", user.id);
-    await next();
-  } else {
+    if (user) {
+      //@ts-ignore
+      c.set("userId", user.id);
+      await next();
+    } else {
+      c.status(403);
+      return c.json({
+        message: "You are not loggged in!",
+      });
+    }
+  } catch (err) {
     c.status(403);
     return c.json({
-      message: "You are not loggged in!",
+      message: "You are not loggen in",
     });
   }
 });
