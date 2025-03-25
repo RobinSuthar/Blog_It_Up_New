@@ -5,14 +5,21 @@ import { withAccelerate } from "@prisma/extension-accelerate";
 
 import { Env } from "hono";
 import { env } from "hono/adapter";
+import { blog } from "../routes/blog";
+import { user } from "../routes/user";
 export const app = new Hono<{
   Bindings: {
     DATABASE_URL: string;
+    secert: string;
   };
 }>();
 
+app.route("/api/v1/blog", blog);
+
+app.route("/api/v1/user", user);
+
 app.post("/api/v1/signup", async (c) => {
-  const { id, email, name, password } = await c.req.json();
+  const { email, name, password } = await c.req.json();
 
   const prisma = new PrismaClient({
     datasourceUrl: c.env?.DATABASE_URL,
@@ -21,7 +28,6 @@ app.post("/api/v1/signup", async (c) => {
   try {
     const user = await prisma.user.create({
       data: {
-        id: id,
         email: email,
         name: name,
         password: password,
@@ -29,7 +35,7 @@ app.post("/api/v1/signup", async (c) => {
     });
     const payLoad = { id: user.id };
 
-    const token = await sign(payLoad, "CristianoRonaldoIsBest");
+    const token = await sign(payLoad, c.env.secert);
 
     return c.json({
       message: token,
@@ -56,6 +62,11 @@ app.post("/api/v1/signin", async (c) => {
       },
     });
 
+    if (!user?.id) {
+      return c.json({
+        message: "Inccorect Creadiants",
+      });
+    }
     return c.json({
       message: "User Found SuccessFully",
     });
@@ -64,20 +75,6 @@ app.post("/api/v1/signin", async (c) => {
       Error: "Cannot Find User : " + err,
     });
   }
-});
-
-app.get("/api/v1/blog/:id", (c) => {
-  const id = c.req.param("id");
-  console.log(id);
-  return c.text("get blog route");
-});
-
-app.post("/api/v1/blog", (c) => {
-  return c.text("signin route");
-});
-
-app.put("/api/v1/blog", (c) => {
-  return c.text("signin route");
 });
 
 export default app;
