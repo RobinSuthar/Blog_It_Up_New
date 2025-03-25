@@ -1,10 +1,10 @@
 import { Hono } from "hono";
-
-// Create the main Hono app
-
+import { decode, sign, verify } from "hono/jwt";
 import { PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
 
+import { Env } from "hono";
+import { env } from "hono/adapter";
 export const app = new Hono<{
   Bindings: {
     DATABASE_URL: string;
@@ -12,25 +12,34 @@ export const app = new Hono<{
 }>();
 
 app.post("/api/v1/signup", async (c) => {
+  const { id, email, name, password } = await c.req.json();
 
-  console.log(c);
-  console.log("SADasd")
   const prisma = new PrismaClient({
     datasourceUrl: c.env?.DATABASE_URL,
   }).$extends(withAccelerate());
-  const body = await c.req.json();
 
-console.log("SAdasd")
   try {
     const user = await prisma.user.create({
       data: {
-        email: body.email,
-        password: body.password,
+        id: id,
+        email: email,
+        name: name,
+        password: password,
       },
     });
-    return c.text("jwt here");
-  } catch (e) {
-    return c.status(403);
+
+    const payLoad = { id: user.id };
+
+    const token = await sign(payLoad, "CristianoRonaldoIsBest");
+
+    return c.json({
+      message: token,
+    });
+    0;
+  } catch (err) {
+    return c.json({
+      Error: "Cannot Created User : " + err,
+    });
   }
 });
 
