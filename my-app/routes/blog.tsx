@@ -8,6 +8,9 @@ export const blog = new Hono<{
     DATABASE_URL: string;
     secert: string;
   };
+  Variables: {
+    userId: string;
+  };
 }>();
 
 blog.use("/*", async (c, next) => {
@@ -17,7 +20,7 @@ blog.use("/*", async (c, next) => {
   if (user) {
     //@ts-ignore
     c.set("userId", user.id);
-    next();
+    await next();
   } else {
     c.status(403);
     return c.json({
@@ -27,8 +30,8 @@ blog.use("/*", async (c, next) => {
 });
 
 blog.post("/", async (c) => {
-  const { title, content, authoreId } = await c.req.json();
-
+  const { title, content } = await c.req.json();
+  const authId = c.get("userId");
   const prisma = new PrismaClient({
     datasourceUrl: c.env.DATABASE_URL,
   }).$extends(withAccelerate());
@@ -39,8 +42,7 @@ blog.post("/", async (c) => {
         title: title,
         content: content,
         published: true,
-
-        authorId: authoreId,
+        authorId: authId,
       },
     });
 
@@ -58,12 +60,13 @@ blog.post("/", async (c) => {
 });
 
 blog.put("/", async (c) => {
-  const { id, title, content, authoreId } = await c.req.json();
+  const { id, title, content } = await c.req.json();
 
   const prisma = new PrismaClient({
     datasourceUrl: c.env.DATABASE_URL,
   }).$extends(withAccelerate());
 
+  const authId = c.get("userId");
   try {
     const blog = await prisma.post.update({
       where: {
@@ -73,9 +76,7 @@ blog.put("/", async (c) => {
       data: {
         title: title,
         content: content,
-        published: true,
-
-        authorId: authoreId,
+        authorId: authId,
       },
     });
 
@@ -92,8 +93,22 @@ blog.put("/", async (c) => {
   }
 });
 
-blog.get("/", async (c) => {
-  const { id } = await c.req.json();
+blog.get("/bulk", async (c) => {
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  }).$extends(withAccelerate());
+
+  try {
+    const blogs = await prisma.post.findMany();
+
+    return c.json({ message: blogs });
+  } catch (err) {
+    return c.json({ message: "Error Occured : " + err });
+  }
+});
+
+blog.get("/:id", async (c) => {
+  const id = c.req.param("id");
 
   const prisma = new PrismaClient({
     datasourceUrl: c.env.DATABASE_URL,
@@ -114,20 +129,6 @@ blog.get("/", async (c) => {
     }
 
     return c.json({ message: blog });
-  } catch (err) {
-    return c.json({ message: "Error Occured : " + err });
-  }
-});
-
-blog.get("/bulk", async (c) => {
-  const prisma = new PrismaClient({
-    datasourceUrl: c.env.DATABASE_URL,
-  }).$extends(withAccelerate());
-
-  try {
-    const blogs = prisma.post.findMany();
-
-    return c.json({ message: blogs });
   } catch (err) {
     return c.json({ message: "Error Occured : " + err });
   }
