@@ -3,16 +3,28 @@ import { decode, sign, verify } from "hono/jwt";
 import { PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
 
-import { Env } from "hono";
-import { env } from "hono/adapter";
-import { user } from "../routes/user";
-
 export const blog = new Hono<{
   Bindings: {
     DATABASE_URL: string;
     secert: string;
   };
 }>();
+
+blog.use("/*", async (c, next) => {
+  const authUser = c.req.header("authorization") || "";
+  const user = await verify(authUser, c.env.secert);
+
+  if (user) {
+    //@ts-ignore
+    c.set("userId", user.id);
+    next();
+  } else {
+    c.status(403);
+    return c.json({
+      message: "You are not loggged in!",
+    });
+  }
+});
 
 blog.post("/", async (c) => {
   const { title, content, authoreId } = await c.req.json();
