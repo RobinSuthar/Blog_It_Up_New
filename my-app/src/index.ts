@@ -2,9 +2,12 @@ import { Hono } from "hono";
 import { decode, sign, verify } from "hono/jwt";
 import { PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
-
-import { Env } from "hono";
-import { env } from "hono/adapter";
+import {
+  signInInput,
+  SignInInput,
+  signUpInput,
+} from "@robinsuthar/blog-website-100";
+import { SignUpInput } from "@robinsuthar/blog-website-100";
 import { blog } from "../routes/blog";
 import { user } from "../routes/user";
 export const app = new Hono<{
@@ -20,6 +23,15 @@ app.route("/api/v1/user", user);
 
 app.post("/api/v1/signup", async (c) => {
   const { email, name, password } = await c.req.json();
+  const body = await c.req.json();
+
+  const { success } = signInInput.safeParse(body);
+
+  if (!success) {
+    return c.json({
+      Error: "Incorrect Inputs ",
+    });
+  }
 
   const prisma = new PrismaClient({
     datasourceUrl: c.env?.DATABASE_URL,
@@ -49,6 +61,15 @@ app.post("/api/v1/signup", async (c) => {
 
 app.post("/api/v1/signin", async (c) => {
   const { name, password } = await c.req.json();
+  const body = await c.req.json();
+
+  const { success } = signInInput.safeParse(body);
+
+  if (!success) {
+    return c.json({
+      Error: "Incorrect Inputs ",
+    });
+  }
 
   const prisma = new PrismaClient({
     datasourceUrl: c.env?.DATABASE_URL,
