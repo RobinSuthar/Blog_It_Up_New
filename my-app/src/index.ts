@@ -27,7 +27,6 @@ app.post("/api/v1/signup", async (c) => {
         password: password,
       },
     });
-
     const payLoad = { id: user.id };
 
     const token = await sign(payLoad, "CristianoRonaldoIsBest");
@@ -42,8 +41,29 @@ app.post("/api/v1/signup", async (c) => {
   }
 });
 
-app.post("/api/v1/signin", (c) => {
-  return c.text("signin route");
+app.post("/api/v1/signin", async (c) => {
+  const { name, password } = await c.req.json();
+
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env?.DATABASE_URL,
+  }).$extends(withAccelerate());
+
+  try {
+    const user = await prisma.user.findFirst({
+      where: {
+        name: name,
+        password: password,
+      },
+    });
+
+    return c.json({
+      message: "User Found SuccessFully",
+    });
+  } catch (err) {
+    return c.json({
+      Error: "Cannot Find User : " + err,
+    });
+  }
 });
 
 app.get("/api/v1/blog/:id", (c) => {
