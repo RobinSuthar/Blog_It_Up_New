@@ -15,7 +15,7 @@ export const blog = new Hono<{
 }>();
 
 blog.post("/", async (c) => {
-  const { title, content, author, authoreId } = await c.req.json();
+  const { title, content, authoreId } = await c.req.json();
 
   const prisma = new PrismaClient({
     datasourceUrl: c.env.DATABASE_URL,
@@ -27,7 +27,7 @@ blog.post("/", async (c) => {
         title: title,
         content: content,
         published: true,
-        author: author,
+
         authorId: authoreId,
       },
     });
@@ -39,26 +39,84 @@ blog.post("/", async (c) => {
       });
     }
 
-    return c.json({ message: "Blog Created Successfully" });
+    return c.json({ message: blog.id });
   } catch (err) {
     return c.json({ message: "Error Occured : " + err });
   }
 });
 
-blog.get("/", (c) => {
-  return c.json({
-    message: "Hello",
-  });
+blog.put("/", async (c) => {
+  const { id, title, content, authoreId } = await c.req.json();
+
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  }).$extends(withAccelerate());
+
+  try {
+    const blog = await prisma.post.update({
+      where: {
+        id: id,
+      },
+
+      data: {
+        title: title,
+        content: content,
+        published: true,
+
+        authorId: authoreId,
+      },
+    });
+
+    if (!blog.id) {
+      c.status(403);
+      return c.json({
+        message: "Could not Added Blog ",
+      });
+    }
+
+    return c.json({ message: blog.id });
+  } catch (err) {
+    return c.json({ message: "Error Occured : " + err });
+  }
 });
 
-blog.get("/", (c) => {
-  return c.json({
-    message: "Hello",
-  });
+blog.get("/", async (c) => {
+  const { id } = await c.req.json();
+
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  }).$extends(withAccelerate());
+
+  try {
+    const blog = await prisma.post.findFirst({
+      where: {
+        id: id,
+      },
+    });
+
+    if (!blog?.id) {
+      c.status(403);
+      return c.json({
+        message: "Could not Added Blog ",
+      });
+    }
+
+    return c.json({ message: blog });
+  } catch (err) {
+    return c.json({ message: "Error Occured : " + err });
+  }
 });
 
-blog.get("/", (c) => {
-  return c.json({
-    message: "Hello",
-  });
+blog.get("/bulk", async (c) => {
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  }).$extends(withAccelerate());
+
+  try {
+    const blogs = prisma.post.findMany();
+
+    return c.json({ message: blogs });
+  } catch (err) {
+    return c.json({ message: "Error Occured : " + err });
+  }
 });
