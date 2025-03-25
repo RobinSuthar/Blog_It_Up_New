@@ -4,6 +4,7 @@
   "main": "src/index.ts",
   "compatibility_date": "2025-03-25",
   "vars": {
+    "secert": "CristianoRonaldoIsTheBestEver",
     "DATABASE_URL": "prisma://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGlfa2V5IjoiNzkyNzdkNzctMzU0MS00ZjQ3LTliNjMtOTU3NjI0ZmMxYzZiIiwidGVuYW50X2lkIjoiMzU4MGQ4MjA4YmU5YWNkYzFjYWJkMDhkOGMxYzk2ZTIzNDVhZWNlYzY0YjI0YmQ1ZDA2MjFiMGQ5MDNmN2ViOCIsImludGVybmFsX3NlY3JldCI6IjkwNWJjOTQyLWM1ZjMtNDljMC04NzNkLTljMjViNTljNWRiMCJ9.VWR1efCHhpBXqzz7rTWBR5IRvxsF7gxc3xxLvkHlNKU"
   }
   // "compatibility_flags": [

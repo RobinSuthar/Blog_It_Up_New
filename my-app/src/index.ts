@@ -35,7 +35,6 @@ app.post("/api/v1/signup", async (c) => {
     return c.json({
       message: token,
     });
-    0;
   } catch (err) {
     return c.json({
       Error: "Cannot Created User : " + err,
