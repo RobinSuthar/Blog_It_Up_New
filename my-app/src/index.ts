@@ -7,15 +7,19 @@ import {
   SignInInput,
   signUpInput,
 } from "@robinsuthar/blog-website-100";
+
 import { SignUpInput } from "@robinsuthar/blog-website-100";
 import { blog } from "../routes/blog";
 import { user } from "../routes/user";
+import { cors } from "hono/cors";
 export const app = new Hono<{
   Bindings: {
     DATABASE_URL: string;
     secert: string;
   };
 }>();
+
+app.use("/", cors());
 
 app.route("/api/v1/blog", blog);
 
@@ -24,6 +28,7 @@ app.route("/api/v1/user", user);
 app.post("/api/v1/signup", async (c) => {
   const { email, name, password } = await c.req.json();
   const body = await c.req.json();
+  console.log(blog);
 
   const { success } = signInInput.safeParse(body);
 
